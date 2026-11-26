@@ -16,6 +16,9 @@ const COMIDAS = ['🍎', '🍰', '🍉', '🍓', '🍩', '🍔'];
 let itens = [];
 let tempoNovoItem = 1; // segundos até nascer o próximo item
 
+let pontos = 0;
+let vidas = 3;
+ 
 
 addEventListener('keydown', (e) => {
   if (e.key.startsWith('Arrow')) e.preventDefault(); // não deixa a página rolar
@@ -59,9 +62,26 @@ function atualizarItens(dt) {
 
   for (const item of itens) {
     item.y += item.vy * dt;
-    if (item.y > ALTURA + 30) item.morto = true; // saiu da tela
+
+    // colisão círculo com círculo: se a distância entre os centros
+    // for menor que a soma dos raios, eles se encostaram
+    const distancia = Math.hypot(kirby.x - item.x, kirby.y - item.y);
+    if (distancia < kirby.raio + item.raio - 8) { // o -8 deixa a colisão um pouco mais gentil
+      item.morto = true;
+      if (item.tipo === 'comida') pontos += 10;
+      else vidas--;
+    }
+
+    if (item.y > ALTURA + 30) item.morto = true;
   }
-  itens = itens.filter((item) => !item.morto);   // joga fora os itens "mortos"
+  itens = itens.filter((item) => !item.morto);
+
+  // PROVISÓRIO: quando acabam as vidas, recomeça. Na etapa 3 isso vira a tela de Game Over.
+  if (vidas <= 0) {
+    vidas = 3;
+    pontos = 0;
+    itens = [];
+  }
 }
 
 function desenharItens() {
