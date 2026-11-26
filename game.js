@@ -11,6 +11,12 @@ const kirby = { x: LARGURA / 2, y: ALTURA - 62, raio: 34, vx: 0 };
 // Guarda quais teclas estão apertadas neste momento
 const teclas = {};
 
+// Itens que caem do topo (comida ou bomba)
+const COMIDAS = ['🍎', '🍰', '🍉', '🍓', '🍩', '🍔'];
+let itens = [];
+let tempoNovoItem = 1; // segundos até nascer o próximo item
+
+
 addEventListener('keydown', (e) => {
   if (e.key.startsWith('Arrow')) e.preventDefault(); // não deixa a página rolar
   teclas[e.key.toLowerCase()] = true;
@@ -30,6 +36,39 @@ function moverKirby(dt) {
 
   // não deixa o Kirby sair da tela
   kirby.x = Math.max(kirby.raio, Math.min(LARGURA - kirby.raio, kirby.x));
+}
+
+function criarItem() {
+  const ehBomba = Math.random() < 0.22; // cerca de 1 em cada 5 itens é bomba
+  itens.push({
+    x: 30 + Math.random() * (LARGURA - 60),
+    y: -30,
+    vy: 130 + Math.random() * 80,       // velocidade de queda (cada item é um pouco diferente)
+    raio: 20,
+    tipo: ehBomba ? 'bomba' : 'comida',
+    emoji: ehBomba ? '💣' : COMIDAS[Math.floor(Math.random() * COMIDAS.length)]
+  });
+}
+
+function atualizarItens(dt) {
+  tempoNovoItem -= dt;
+  if (tempoNovoItem <= 0) {
+    criarItem();
+    tempoNovoItem = 1;
+  }
+
+  for (const item of itens) {
+    item.y += item.vy * dt;
+    if (item.y > ALTURA + 30) item.morto = true; // saiu da tela
+  }
+  itens = itens.filter((item) => !item.morto);   // joga fora os itens "mortos"
+}
+
+function desenharItens() {
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '38px sans-serif';
+  for (const item of itens) ctx.fillText(item.emoji, item.x, item.y);
 }
 
 function desenhar() {
