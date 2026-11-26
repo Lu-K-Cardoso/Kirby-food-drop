@@ -5,23 +5,17 @@ const ctx = canvas.getContext('2d');
 const LARGURA = canvas.width;
 const ALTURA = canvas.height;
 
-// O Kirby: posição, tamanho e velocidade horizontal
 const kirby = { x: LARGURA / 2, y: ALTURA - 62, raio: 34, vx: 0 };
-
-// Guarda quais teclas estão apertadas neste momento
 const teclas = {};
 
-// Itens que caem do topo (comida ou bomba)
+// ===== NOVO (passo 1): variáveis dos itens =====
 const COMIDAS = ['🍎', '🍰', '🍉', '🍓', '🍩', '🍔'];
 let itens = [];
-let tempoNovoItem = 1; // segundos até nascer o próximo item
-
-let pontos = 0;
-let vidas = 3;
- 
+let tempoNovoItem = 1;
+// ===============================================
 
 addEventListener('keydown', (e) => {
-  if (e.key.startsWith('Arrow')) e.preventDefault(); // não deixa a página rolar
+  if (e.key.startsWith('Arrow')) e.preventDefault();
   teclas[e.key.toLowerCase()] = true;
 });
 
@@ -36,17 +30,16 @@ function moverKirby(dt) {
 
   kirby.vx = direcao * 380;
   kirby.x += kirby.vx * dt;
-
-  // não deixa o Kirby sair da tela
   kirby.x = Math.max(kirby.raio, Math.min(LARGURA - kirby.raio, kirby.x));
 }
 
+// ===== NOVO (passo 2): as 3 funções que você mandou =====
 function criarItem() {
-  const ehBomba = Math.random() < 0.22; // cerca de 1 em cada 5 itens é bomba
+  const ehBomba = Math.random() < 0.22;
   itens.push({
     x: 30 + Math.random() * (LARGURA - 60),
     y: -30,
-    vy: 130 + Math.random() * 80,       // velocidade de queda (cada item é um pouco diferente)
+    vy: 130 + Math.random() * 80,
     raio: 20,
     tipo: ehBomba ? 'bomba' : 'comida',
     emoji: ehBomba ? '💣' : COMIDAS[Math.floor(Math.random() * COMIDAS.length)]
@@ -62,26 +55,9 @@ function atualizarItens(dt) {
 
   for (const item of itens) {
     item.y += item.vy * dt;
-
-    // colisão círculo com círculo: se a distância entre os centros
-    // for menor que a soma dos raios, eles se encostaram
-    const distancia = Math.hypot(kirby.x - item.x, kirby.y - item.y);
-    if (distancia < kirby.raio + item.raio - 8) { // o -8 deixa a colisão um pouco mais gentil
-      item.morto = true;
-      if (item.tipo === 'comida') pontos += 10;
-      else vidas--;
-    }
-
     if (item.y > ALTURA + 30) item.morto = true;
   }
   itens = itens.filter((item) => !item.morto);
-
-  // PROVISÓRIO: quando acabam as vidas, recomeça. Na etapa 3 isso vira a tela de Game Over.
-  if (vidas <= 0) {
-    vidas = 3;
-    pontos = 0;
-    itens = [];
-  }
 }
 
 function desenharItens() {
@@ -90,17 +66,17 @@ function desenharItens() {
   ctx.font = '38px sans-serif';
   for (const item of itens) ctx.fillText(item.emoji, item.x, item.y);
 }
+// ========================================================
 
 function desenhar() {
-  // 1) pinta o fundo de novo a cada frame: é isso que apaga o frame anterior e evita rastros
   ctx.fillStyle = '#8fd3ff';
   ctx.fillRect(0, 0, LARGURA, ALTURA);
 
-  // 2) chão
   ctx.fillStyle = '#6fcf6b';
   ctx.fillRect(0, ALTURA - 28, LARGURA, 28);
 
-  // 3) Kirby (por enquanto: um círculo rosa com dois olhos)
+  desenharItens();   // ===== NOVO (passo 3): depois do chão, antes do Kirby =====
+
   ctx.fillStyle = '#ffaed0';
   ctx.beginPath();
   ctx.arc(kirby.x, kirby.y, kirby.raio, 0, Math.PI * 2);
@@ -114,15 +90,14 @@ function desenhar() {
   }
 }
 
-// O loop principal: roda uma vez por frame (cerca de 60 vezes por segundo)
 let tempoAnterior = 0;
 
 function loopPrincipal(agora) {
-  // dt = segundos desde o último frame; assim a velocidade é igual em qualquer computador
   const dt = Math.min(0.033, (agora - tempoAnterior) / 1000 || 0);
   tempoAnterior = agora;
 
   moverKirby(dt);
+  atualizarItens(dt);   // ===== NOVO (passo 4): depois de mover o Kirby =====
   desenhar();
   requestAnimationFrame(loopPrincipal);
 }
