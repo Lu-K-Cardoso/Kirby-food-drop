@@ -87,6 +87,17 @@ function desenharItens() {
   for (const item of itens) ctx.fillText(item.emoji, item.x, item.y);
 }
 // ========================================================
+ function desenharPlacar() {
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#2b2d6e';
+  ctx.font = '700 22px sans-serif';
+
+  ctx.textAlign = 'left';
+  ctx.fillText('Pontos ' + pontos, 14, 30);
+
+  ctx.textAlign = 'right';
+  ctx.fillText('❤️'.repeat(Math.max(0, vidas)), LARGURA - 14, 30);
+}
 
 function desenhar() {
   ctx.fillStyle = '#8fd3ff';
@@ -108,6 +119,7 @@ function desenhar() {
     ctx.ellipse(kirby.x + lado * 10, kirby.y - 10, 4, 9, 0, 0, Math.PI * 2);
     ctx.fill();
   }
+  desenharPlacar();
 }
 
 let tempoAnterior = 0;
