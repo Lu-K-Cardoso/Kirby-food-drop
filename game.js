@@ -1,31 +1,62 @@
-// Kirby Food Drop - Etapa 1: canvas, loop e movimento
+// Kirby Food Drop
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const LARGURA = canvas.width;
 const ALTURA = canvas.height;
 
+// ---------- Estado do jogo ----------
+let estado = 'menu';   // 'menu', 'jogando' ou 'fim' (game over)
+let pontos = 0;
+let vidas = 3;
+let recorde = Number(localStorage.getItem('kirbyRecorde')) || 0; // fica salvo no navegador
+
+// ---------- Kirby e teclado ----------
 const kirby = { x: LARGURA / 2, y: ALTURA - 62, raio: 34, vx: 0 };
 const teclas = {};
 
-// ===== NOVO (passo 1): variáveis dos itens =====
+// ---------- Itens que caem ----------
 const COMIDAS = ['🍎', '🍰', '🍉', '🍓', '🍩', '🍔'];
 let itens = [];
 let tempoNovoItem = 1;
 
-let pontos = 0;
-let vidas = 3;
-// ===============================================
-
+// ---------- Entrada ----------
 addEventListener('keydown', (e) => {
   if (e.key.startsWith('Arrow')) e.preventDefault();
   teclas[e.key.toLowerCase()] = true;
+
+  // Enter começa ou reinicia o jogo (menos quando já está jogando)
+  if (e.key === 'Enter' && estado !== 'jogando') iniciarJogo();
 });
 
 addEventListener('keyup', (e) => {
   teclas[e.key.toLowerCase()] = false;
 });
 
+canvas.addEventListener('click', () => {
+  if (estado !== 'jogando') iniciarJogo();
+});
+
+// ---------- Controle do jogo ----------
+function iniciarJogo() {
+  kirby.x = LARGURA / 2;
+  kirby.vx = 0;
+  itens = [];
+  pontos = 0;
+  vidas = 3;
+  tempoNovoItem = 1;
+  estado = 'jogando';
+}
+
+function terminarJogo() {
+  estado = 'fim';
+  if (pontos > recorde) {
+    recorde = pontos;
+    localStorage.setItem('kirbyRecorde', recorde);
+  }
+}
+
+// ---------- Lógica ----------
 function moverKirby(dt) {
   let direcao = 0;
   if (teclas['arrowright'] || teclas['d']) direcao += 1;
@@ -36,7 +67,6 @@ function moverKirby(dt) {
   kirby.x = Math.max(kirby.raio, Math.min(LARGURA - kirby.raio, kirby.x));
 }
 
-// ===== NOVO (passo 2): as 3 funções que você mandou =====
 function criarItem() {
   const ehBomba = Math.random() < 0.22;
   itens.push({
@@ -59,10 +89,9 @@ function atualizarItens(dt) {
   for (const item of itens) {
     item.y += item.vy * dt;
 
-    // colisão círculo com círculo: se a distância entre os centros
-    // for menor que a soma dos raios, eles se encostaram
+    // colisão círculo com círculo: distância entre os centros < soma dos raios
     const distancia = Math.hypot(kirby.x - item.x, kirby.y - item.y);
-    if (distancia < kirby.raio + item.raio - 8) { // o -8 deixa a colisão um pouco mais gentil
+    if (distancia < kirby.raio + item.raio - 8) {
       item.morto = true;
       if (item.tipo === 'comida') pontos += 10;
       else vidas--;
@@ -72,22 +101,18 @@ function atualizarItens(dt) {
   }
   itens = itens.filter((item) => !item.morto);
 
-  // PROVISÓRIO: quando acabam as vidas, recomeça. Na etapa 3 isso vira a tela de Game Over.
-  if (vidas <= 0) {
-    vidas = 3;
-    pontos = 0;
-    itens = [];
-  }
+  if (vidas <= 0) terminarJogo();
 }
 
+// ---------- Desenho ----------
 function desenharItens() {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = '38px sans-serif';
   for (const item of itens) ctx.fillText(item.emoji, item.x, item.y);
 }
-// ========================================================
- function desenharPlacar() {
+
+function desenharPlacar() {
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#2b2d6e';
   ctx.font = '700 22px sans-serif';
@@ -100,36 +125,41 @@ function desenharItens() {
 }
 
 function desenhar() {
+  // fundo e chão (repintar tudo a cada frame evita rastros)
   ctx.fillStyle = '#8fd3ff';
   ctx.fillRect(0, 0, LARGURA, ALTURA);
-
   ctx.fillStyle = '#6fcf6b';
   ctx.fillRect(0, ALTURA - 28, LARGURA, 28);
 
-  desenharItens();   // ===== NOVO (passo 3): depois do chão, antes do Kirby =====
+  desenharItens();
 
+  // Kirby
   ctx.fillStyle = '#ffaed0';
   ctx.beginPath();
   ctx.arc(kirby.x, kirby.y, kirby.raio, 0, Math.PI * 2);
   ctx.fill();
-
   ctx.fillStyle = '#1b1f4d';
   for (const lado of [-1, 1]) {
     ctx.beginPath();
     ctx.ellipse(kirby.x + lado * 10, kirby.y - 10, 4, 9, 0, 0, Math.PI * 2);
     ctx.fill();
   }
+
   desenharPlacar();
 }
 
+// ---------- Loop principal ----------
 let tempoAnterior = 0;
 
 function loopPrincipal(agora) {
   const dt = Math.min(0.033, (agora - tempoAnterior) / 1000 || 0);
   tempoAnterior = agora;
 
-  moverKirby(dt);
-  atualizarItens(dt);   // ===== NOVO (passo 4): depois de mover o Kirby =====
+  // só atualiza a lógica quando está jogando; nos outros estados o jogo fica parado
+  if (estado === 'jogando') {
+    moverKirby(dt);
+    atualizarItens(dt);
+  }
   desenhar();
   requestAnimationFrame(loopPrincipal);
 }
