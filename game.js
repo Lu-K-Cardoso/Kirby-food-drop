@@ -184,21 +184,68 @@ function desenharTelas() {
   }
 }
 
+const FONTE_TITULO = '"Arial Black", Impact, sans-serif';
+
+// Fundo quadriculado (estilo arcade). O "deslocamento" faz o xadrez andar na diagonal.
+function desenharXadrez(x, y, w, h, cor1, cor2, tamanho, deslocamento) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip(); // só desenha dentro da área
+  const colunas = Math.ceil(w / tamanho) + 2;
+  const linhas = Math.ceil(h / tamanho) + 2;
+  for (let linha = -1; linha < linhas; linha++) {
+    for (let coluna = -1; coluna < colunas; coluna++) {
+      ctx.fillStyle = (linha + coluna) % 2 === 0 ? cor1 : cor2;
+      ctx.fillRect(x + coluna * tamanho + deslocamento, y + linha * tamanho + deslocamento, tamanho, tamanho);
+    }
+  }
+  ctx.restore();
+}
+
+// Texto grande com sombra; se não couber na tela, diminui a fonte
+function textoComSombra(texto, x, y, tamanho, cor) {
+  ctx.font = '900 ' + tamanho + 'px ' + FONTE_TITULO;
+  while (ctx.measureText(texto).width > LARGURA - 40 && tamanho > 20) {
+    tamanho -= 2;
+    ctx.font = '900 ' + tamanho + 'px ' + FONTE_TITULO;
+  }
+  ctx.fillStyle = '#12143a';
+  ctx.fillText(texto, x + 6, y + 6);
+  ctx.fillStyle = cor;
+  ctx.fillText(texto, x, y);
+}
+
 function desenharTitulo() {
-  ctx.fillStyle = '#2b2d6e';
-  ctx.fillRect(0, 0, LARGURA, ALTURA);
-  ctx.fillStyle = '#fff';
+  desenharXadrez(0, 0, LARGURA, ALTURA, '#2b2d6e', '#363a85', 40, (tempoAnterior / 40) % 40);
+
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.font = '700 40px sans-serif';
-  ctx.fillText('Kirby Food Drop', LARGURA / 2, 250);
+  textoComSombra('KIRBY', LARGURA / 2, 190, 110, '#ffaed0');
+  textoComSombra('FOOD DROP', LARGURA / 2, 290, 62, '#ffe27a');
 
+  // botão de play que pulsa de leve
   const b = BOTAO_JOGAR;
-  ctx.fillStyle = '#ff9ec4';
-  ctx.fillRect(b.x, b.y, b.w, b.h);
-  ctx.fillStyle = '#2b2d6e';
-  ctx.font = '700 30px sans-serif';
-  ctx.fillText('JOGAR', b.x + b.w / 2, b.y + b.h / 2);
+  const pulso = 1 + Math.sin(tempoAnterior / 250) * 0.04;
+  ctx.save();
+  ctx.translate(b.x + b.w / 2, b.y + b.h / 2);
+  ctx.scale(pulso, pulso);
+  ctx.fillStyle = '#12143a';
+  ctx.beginPath();
+  ctx.roundRect(-b.w / 2 + 5, -b.h / 2 + 6, b.w, b.h, 16); // sombra
+  ctx.fill();
+  ctx.fillStyle = '#6fcf6b';
+  ctx.beginPath();
+  ctx.roundRect(-b.w / 2, -b.h / 2, b.w, b.h, 16);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = '900 34px ' + FONTE_TITULO;
+  ctx.fillText('▶ JOGAR', 0, 2);
+  ctx.restore();
+
+  ctx.fillStyle = '#fff';
+  ctx.font = '600 16px sans-serif';
+  ctx.fillText('ou aperte Enter', LARGURA / 2, b.y + b.h + 40);
 }
 
 function desenharModos() {
