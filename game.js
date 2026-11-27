@@ -323,6 +323,97 @@ function desenharGrade(x) {
   }
 }
 
+function elipse(x, y, rx, ry, cor) {
+  ctx.fillStyle = cor;
+  ctx.beginPath();
+  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// Kirby só de enfeite na seleção: i = 0 angelical, 1 sério, 2 maligno
+function desenharKirbyDoModo(i, x, y) {
+  const r = 46;
+
+  if (i === 0) { // asas e auréola
+    elipse(x - r * 1.05, y - r * 0.1, r * 0.55, r * 0.35, '#ffffff');
+    elipse(x + r * 1.05, y - r * 0.1, r * 0.55, r * 0.35, '#ffffff');
+    ctx.strokeStyle = '#ffd23f';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.ellipse(x, y - r * 1.2, r * 0.5, r * 0.16, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  if (i === 2) { // chifres
+    ctx.fillStyle = '#c8181f';
+    for (const lado of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(x + lado * r * 0.35, y - r * 0.85);
+      ctx.lineTo(x + lado * r * 0.75, y - r * 0.7);
+      ctx.lineTo(x + lado * r * 0.8, y - r * 1.4);
+      ctx.fill();
+    }
+  }
+
+  // pés, mãos, corpo e bochechas
+  const corCorpo = ['#ffc6dd', '#ffaed0', '#ffaed0'][i];
+  elipse(x - r * 0.55, y + r * 0.85, r * 0.45, r * 0.28, '#d8324f');
+  elipse(x + r * 0.55, y + r * 0.85, r * 0.45, r * 0.28, '#d8324f');
+  elipse(x - r * 0.95, y + 4, r * 0.3, r * 0.22, '#ff8fb8');
+  elipse(x + r * 0.95, y + 4, r * 0.3, r * 0.22, '#ff8fb8');
+  elipse(x, y, r, r * 0.95, corCorpo);
+  elipse(x - r * 0.55, y + r * 0.2, r * 0.2, r * 0.12, '#ff6f9f');
+  elipse(x + r * 0.55, y + r * 0.2, r * 0.2, r * 0.12, '#ff6f9f');
+
+  // olhos (vermelhos no maligno)
+  const corOlho = i === 2 ? '#ff2d2d' : '#1b1f4d';
+  for (const lado of [-1, 1]) {
+    elipse(x + lado * r * 0.3, y - r * 0.3, r * 0.12, r * 0.28, corOlho);
+    elipse(x + lado * r * 0.3, y - r * 0.42, r * 0.07, r * 0.1, '#fff');
+  }
+
+  ctx.lineCap = 'round';
+
+  // sobrancelhas: quase retas no sério, bem inclinadas no maligno
+  if (i === 1 || i === 2) {
+    ctx.strokeStyle = '#1b1f4d';
+    ctx.lineWidth = 4;
+    const yFora = y - r * (i === 2 ? 0.84 : 0.74);
+    const yDentro = y - r * (i === 2 ? 0.48 : 0.62);
+    for (const lado of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(x + lado * r * 0.5, yFora);
+      ctx.lineTo(x + lado * r * 0.12, yDentro);
+      ctx.stroke();
+    }
+  }
+  
+  if (i === 2) { // presas
+    ctx.fillStyle = '#fff';
+    for (const lado of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(x + lado * r * 0.12, y + r * 0.34);
+      ctx.lineTo(x + lado * r * 0.22, y + r * 0.34);
+      ctx.lineTo(x + lado * r * 0.17, y + r * 0.48);
+      ctx.fill();
+    }
+  }
+  ctx.lineCap = 'butt';
+
+  // boca: sorriso, linha reta ou sorriso malvado com presas
+  ctx.strokeStyle = '#5a1030';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  if (i === 0) {
+    ctx.arc(x, y + r * 0.1, r * 0.2, 0.2, Math.PI - 0.2);
+  } else if (i === 1) {
+    ctx.moveTo(x - r * 0.16, y + r * 0.3);
+    ctx.lineTo(x + r * 0.16, y + r * 0.3);
+  } else {
+    ctx.arc(x, y + r * 0.12, r * 0.28, 0.1, Math.PI - 0.1);
+  }
+  ctx.stroke(); 
+}
+
 function desenharModos() {
   MODOS.forEach((m, i) => {
     const x = i * LARGURA_COLUNA;
@@ -330,6 +421,8 @@ function desenharModos() {
 
     desenharFundoDoModo(i, x);
     desenharGrade(x);
+
+    desenharKirbyDoModo(i, centro, 175);
 
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
