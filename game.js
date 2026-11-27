@@ -6,10 +6,20 @@ const LARGURA = canvas.width;
 const ALTURA = canvas.height;
 
 // ---------- Estado do jogo ----------
-let estado = 'menu';   // 'menu', 'jogando' ou 'fim' (game over)
+let estado = 'titulo';   // 'titulo', 'modos', 'jogando' ou 'fim' (game over)
+let modo = 0;            // 0 = Fácil, 1 = Médio, 2 = Difícil
 let pontos = 0;
 let vidas = 3;
 let recorde = Number(localStorage.getItem('kirbyRecorde')) || 0; // fica salvo no navegador
+
+// ---------- Modos de jogo (cada um ocupa uma coluna da tela de seleção) ----------
+const MODOS = [
+  { nome: 'Fácil', desc: ['Só cai', 'comida e', 'bomba'] },
+  { nome: 'Médio', desc: ['Comida,', 'bombas,', 'escudo e', 'inimigos'] },
+  { nome: 'Difícil', desc: ['Só bombas', 'e uma comida', 'por vez'] }
+];
+const LARGURA_COLUNA = LARGURA / 3;
+const BOTAO_JOGAR = { x: LARGURA / 2 - 110, y: 400, w: 220, h: 70 };
 
 // ---------- Kirby e teclado ----------
 const kirby = { x: LARGURA / 2, y: ALTURA - 62, raio: 34, vx: 0 };
@@ -25,20 +35,45 @@ addEventListener('keydown', (e) => {
   if (e.key.startsWith('Arrow')) e.preventDefault();
   teclas[e.key.toLowerCase()] = true;
 
-  // Enter começa ou reinicia o jogo (menos quando já está jogando)
-  if (e.key === 'Enter' && estado !== 'jogando') iniciarJogo();
+  if (estado === 'titulo' && e.key === 'Enter') {
+    estado = 'modos';
+  } else if (estado === 'modos') {
+  if (['1', '2', '3'].includes(e.key)) iniciarJogo(Number(e.key) - 1);
+  if (e.key === 'Escape') estado = 'titulo';
+  } else if (estado === 'fim') {
+  if (e.key === 'Enter') iniciarJogo();
+  if (e.key.toLowerCase() === 'm') estado = 'titulo';
+  }
 });
 
 addEventListener('keyup', (e) => {
   teclas[e.key.toLowerCase()] = false;
 });
 
-canvas.addEventListener('click', () => {
-  if (estado !== 'jogando') iniciarJogo();
+// Converte o clique (pixels da tela) para as coordenadas do canvas
+function posicaoDoMouse(e) {
+  const caixa = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - caixa.left) * LARGURA / caixa.width,
+    y: (e.clientY - caixa.top) * ALTURA / caixa.height
+  };
+}
+
+canvas.addEventListener('click', (e) => {
+  const mouse = posicaoDoMouse(e);
+  if (estado === 'titulo') {
+    const b = BOTAO_JOGAR;
+    if (mouse.x >= b.x && mouse.x <= b.x + b.w && mouse.y >= b.y && mouse.y <= b.y + b.h) estado = 'modos';
+  } else if (estado === 'modos') {
+    iniciarJogo(Math.min(2, Math.floor(mouse.x / LARGURA_COLUNA))); // 0, 1 ou 2 conforme a coluna
+  } else if (estado === 'fim') {
+    iniciarJogo();
+  }
 });
 
 // ---------- Controle do jogo ----------
-function iniciarJogo() {
+function iniciarJogo(novoModo) {
+  if (novoModo !== undefined) modo = novoModo; // sem argumento = repete o mesmo modo
   kirby.x = LARGURA / 2;
   kirby.vx = 0;
   itens = [];
@@ -140,22 +175,53 @@ function desenharCamada(titulo, linhas) {
 }
 
 function desenharTelas() {
-  if (estado === 'menu') {
-    desenharCamada('Kirby Food Drop', [
-      'Pegue as comidas e desvie das bombas',
-      '← → ou A D para mover',
-      'Aperte Enter ou clique para jogar'
-    ]);
-  }
   if (estado === 'fim') {
     desenharCamada('Game Over', [
       'Pontos: ' + pontos + '   Recorde: ' + recorde,
-      'Aperte Enter ou clique para tentar de novo'
+      'Enter ou clique: jogar de novo',
+      'M: voltar ao início'
     ]);
   }
 }
 
+function desenharTitulo() {
+  ctx.fillStyle = '#2b2d6e';
+  ctx.fillRect(0, 0, LARGURA, ALTURA);
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '700 40px sans-serif';
+  ctx.fillText('Kirby Food Drop', LARGURA / 2, 250);
+
+  const b = BOTAO_JOGAR;
+  ctx.fillStyle = '#ff9ec4';
+  ctx.fillRect(b.x, b.y, b.w, b.h);
+  ctx.fillStyle = '#2b2d6e';
+  ctx.font = '700 30px sans-serif';
+  ctx.fillText('JOGAR', b.x + b.w / 2, b.y + b.h / 2);
+}
+
+function desenharModos() {
+  const cores = ['#8fd3ff', '#9a9a9a', '#c0392b'];
+  MODOS.forEach((m, i) => {
+    const x = i * LARGURA_COLUNA;
+    ctx.fillStyle = cores[i];
+    ctx.fillRect(x, 0, LARGURA_COLUNA, ALTURA);
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '700 28px sans-serif';
+    ctx.fillText(m.nome, x + LARGURA_COLUNA / 2, ALTURA / 2 - 30);
+    ctx.font = '600 15px sans-serif';
+    m.desc.forEach((linha, j) => ctx.fillText(linha, x + LARGURA_COLUNA / 2, ALTURA / 2 + 5 + j * 20));
+  });
+}
+
 function desenhar() {
+  // título e seleção de modos ocupam a tela toda: o Kirby e o placar nem aparecem
+  if (estado === 'titulo') { desenharTitulo(); return; }
+  if (estado === 'modos') { desenharModos(); return; }
+
   // fundo e chão (repintar tudo a cada frame evita rastros)
   ctx.fillStyle = '#8fd3ff';
   ctx.fillRect(0, 0, LARGURA, ALTURA);
