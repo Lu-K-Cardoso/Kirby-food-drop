@@ -248,19 +248,98 @@ function desenharTitulo() {
   ctx.fillText('ou aperte Enter', LARGURA / 2, b.y + b.h + 40);
 }
 
+// Contorno escuro em volta do texto, para ler bem em qualquer fundo
+function textoComContorno(texto, x, y, tamanho) {
+  ctx.font = '800 ' + tamanho + 'px sans-serif';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = 'rgba(18, 20, 58, 0.85)';
+  ctx.strokeText(texto, x, y);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(texto, x, y);
+}
+
+// Cenário de cada coluna: 0 = paisagem, 1 = cinza, 2 = inferno
+function desenharFundoDoModo(i, x) {
+  const l = LARGURA_COLUNA;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, 0, l, ALTURA);
+  ctx.clip(); // nada vaza para a coluna do lado
+
+  const cores = [['#8fd3ff', '#f4fbff'], ['#6b6b6b', '#a8a8a8'], ['#12000a', '#7a1010']][i];
+  const ceu = ctx.createLinearGradient(0, 0, 0, ALTURA);
+  ceu.addColorStop(0, cores[0]);
+  ceu.addColorStop(1, cores[1]);
+  ctx.fillStyle = ceu;
+  ctx.fillRect(x, 0, l, ALTURA);
+
+  if (i === 0) { // nuvens e colina verde
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    [[40, 110, 34], [110, 140, 28], [60, 440, 30], [120, 470, 24]].forEach(([cx, cy, r]) => {
+      ctx.beginPath();
+      ctx.arc(x + cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.fillStyle = '#6fcf6b';
+    ctx.beginPath();
+    ctx.ellipse(x + 80, ALTURA, 150, 130, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (i === 1) { // chão de concreto
+    ctx.fillStyle = '#4a4a4a';
+    ctx.fillRect(x, ALTURA - 90, l, 90);
+  }
+  if (i === 2) { // montanhas pontudas e lava
+    ctx.fillStyle = '#2a0508';
+    for (let m = 0; m < 3; m++) {
+      ctx.beginPath();
+      ctx.moveTo(x + m * 70 - 20, ALTURA - 90);
+      ctx.lineTo(x + m * 70 + 35, ALTURA - 260);
+      ctx.lineTo(x + m * 70 + 90, ALTURA - 90);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#ff4a1c';
+    ctx.fillRect(x, ALTURA - 90, l, 90);
+  }
+  ctx.restore();
+}
+
+// Grade fininha por cima do cenário (visual arcade)
+function desenharGrade(x) {
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+  ctx.lineWidth = 1;
+  for (let gx = x; gx <= x + LARGURA_COLUNA; gx += 32) {
+    ctx.beginPath();
+    ctx.moveTo(gx, 0);
+    ctx.lineTo(gx, ALTURA);
+    ctx.stroke();
+  }
+  for (let gy = 0; gy <= ALTURA; gy += 32) {
+    ctx.beginPath();
+    ctx.moveTo(x, gy);
+    ctx.lineTo(x + LARGURA_COLUNA, gy);
+    ctx.stroke();
+  }
+}
+
 function desenharModos() {
-  const cores = ['#8fd3ff', '#9a9a9a', '#c0392b'];
   MODOS.forEach((m, i) => {
     const x = i * LARGURA_COLUNA;
-    ctx.fillStyle = cores[i];
-    ctx.fillRect(x, 0, LARGURA_COLUNA, ALTURA);
-    ctx.fillStyle = '#fff';
+    const centro = x + LARGURA_COLUNA / 2;
+
+    desenharFundoDoModo(i, x);
+    desenharGrade(x);
+
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = '700 28px sans-serif';
-    ctx.fillText(m.nome, x + LARGURA_COLUNA / 2, ALTURA / 2 - 30);
-    ctx.font = '600 15px sans-serif';
-    m.desc.forEach((linha, j) => ctx.fillText(linha, x + LARGURA_COLUNA / 2, ALTURA / 2 + 5 + j * 20));
+    textoComContorno(m.nome, centro, ALTURA / 2, 30);
+    m.desc.forEach((linha, j) => textoComContorno(linha, centro, ALTURA / 2 + 38 + j * 22, 16));
+    textoComContorno('tecla ' + (i + 1), centro, ALTURA - 40, 14);
+
+    ctx.strokeStyle = '#12143a'; // moldura de cada retângulo
+    ctx.lineWidth = 4;
+    ctx.strokeRect(x, 0, LARGURA_COLUNA, ALTURA);
   });
 }
 
