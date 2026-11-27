@@ -124,6 +124,37 @@ function desenharPlacar() {
   ctx.fillText('❤️'.repeat(Math.max(0, vidas)), LARGURA - 14, 30);
 }
 
+// Camada escura por cima do jogo, usada no menu e no game over
+function desenharCamada(titulo, linhas) {
+  ctx.fillStyle = 'rgba(43, 45, 110, 0.55)';
+  ctx.fillRect(0, 0, LARGURA, ALTURA);
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#fff';
+  ctx.font = '700 44px sans-serif';
+  ctx.fillText(titulo, LARGURA / 2, 220);
+
+  ctx.font = '600 18px sans-serif';
+  linhas.forEach((linha, i) => ctx.fillText(linha, LARGURA / 2, 270 + i * 28));
+}
+
+function desenharTelas() {
+  if (estado === 'menu') {
+    desenharCamada('Kirby Food Drop', [
+      'Pegue as comidas e desvie das bombas',
+      '← → ou A D para mover',
+      'Aperte Enter ou clique para jogar'
+    ]);
+  }
+  if (estado === 'fim') {
+    desenharCamada('Game Over', [
+      'Pontos: ' + pontos + '   Recorde: ' + recorde,
+      'Aperte Enter ou clique para tentar de novo'
+    ]);
+  }
+}
+
 function desenhar() {
   // fundo e chão (repintar tudo a cada frame evita rastros)
   ctx.fillStyle = '#8fd3ff';
@@ -146,6 +177,10 @@ function desenhar() {
   }
 
   desenharPlacar();
+  ctx.font = '600 14px sans-serif';
+  ctx.fillText('Recorde ' + recorde, 14, 50);
+  ctx.font = '700 22px sans-serif'; // volta a fonte grande para os corações
+  desenharTelas(); 
 }
 
 // ---------- Loop principal ----------
