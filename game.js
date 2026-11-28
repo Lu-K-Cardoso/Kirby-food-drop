@@ -150,12 +150,15 @@ function desenharItens() {
 function desenharPlacar() {
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#2b2d6e';
-  ctx.font = '700 22px sans-serif';
-
   ctx.textAlign = 'left';
+
+  ctx.font = '700 22px sans-serif';
   ctx.fillText('Pontos ' + pontos, 14, 30);
+  ctx.font = '600 14px sans-serif';
+  ctx.fillText('Recorde ' + recorde, 14, 50);
 
   ctx.textAlign = 'right';
+  ctx.font = '700 22px sans-serif';
   ctx.fillText('❤️'.repeat(Math.max(0, vidas)), LARGURA - 14, 30);
 }
 
@@ -462,9 +465,6 @@ function desenhar() {
   }
 
   desenharPlacar();
-  ctx.font = '600 14px sans-serif';
-  ctx.fillText('Recorde ' + recorde, 14, 50);
-  ctx.font = '700 22px sans-serif'; // volta a fonte grande para os corações
   desenharTelas(); 
 }
 
