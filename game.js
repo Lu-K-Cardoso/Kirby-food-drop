@@ -35,6 +35,11 @@ let folego = 100;          // energia da inalação (0 a 100)
 let semFolego = false;     // true quando zerou: só volta a inalar depois de recuperar 30
 let inalando = false;
 
+// ---------- Vento ----------
+let vento = 0;         // força que o vento quer alcançar (negativo = esquerda)
+let ventoAtual = 0;    // força real: muda aos poucos para o vento não "dar um tranco"
+let tempoVento = 3;    // segundos até o vento mudar
+
 // ---------- Entrada ----------
 addEventListener('keydown', (e) => {
   if (e.key.startsWith('Arrow')) e.preventDefault();
@@ -90,6 +95,9 @@ function iniciarJogo(novoModo) {
   folego = 100;
   semFolego = false;
   inalando = false;
+  vento = 0;
+  ventoAtual = 0;
+  tempoVento = 0;
 }
 
 function terminarJogo() {
@@ -123,6 +131,16 @@ function atualizarFolego(dt) {
   }
 }
 
+function atualizarVento(dt) {
+  tempoVento -= dt;
+  if (tempoVento <= 0) {
+    const calmaria = Math.random() < 0.25;            // às vezes não venta
+    vento = calmaria ? 0 : (Math.random() * 2 - 1) * 100;
+    tempoVento = 4 + Math.random() * 3;
+  }
+  ventoAtual += (vento - ventoAtual) * Math.min(1, 1.5 * dt); // aproxima aos poucos
+}
+
 function criarItem() {
   const ehBomba = Math.random() < 0.22;
   itens.push({
@@ -144,6 +162,9 @@ function atualizarItens(dt) {
 
   for (const item of itens) {
     item.y += item.vy * dt;
+
+    // o vento empurra o item para o lado, sem deixar sair da tela
+    item.x = Math.max(item.raio, Math.min(LARGURA - item.raio, item.x + ventoAtual * dt));
 
     // colisão círculo com círculo: distância entre os centros < soma dos raios
     const distancia = Math.hypot(kirby.x - item.x, kirby.y - item.y) || 1; // "|| 1" evita dividir por zero
@@ -515,6 +536,7 @@ function loopPrincipal(agora) {
   if (estado === 'jogando') {
     moverKirby(dt);
     atualizarFolego(dt);
+    atualizarVento(dt);
     atualizarItens(dt);
   }
   desenhar();
