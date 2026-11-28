@@ -183,6 +183,16 @@ function desenharPlacar() {
   ctx.font = '600 14px sans-serif';
   ctx.fillText('Recorde ' + recorde, 14, 50);
 
+    // barra de fôlego (fica vermelha quando acaba)
+  ctx.fillStyle = 'rgba(43, 45, 110, 0.25)';
+  ctx.fillRect(14, 62, 120, 10);
+  ctx.fillStyle = semFolego ? '#d8324f' : '#ffd23f';
+  ctx.fillRect(14, 62, 120 * folego / 100, 10);
+
+  ctx.font = '600 12px sans-serif';
+  ctx.fillStyle = '#2b2d6e';
+  ctx.fillText(semFolego ? 'sem fôlego!' : 'fôlego', 142, 71);
+
   ctx.textAlign = 'right';
   ctx.font = '700 22px sans-serif';
   ctx.fillText('❤️'.repeat(Math.max(0, vidas)), LARGURA - 14, 30);
