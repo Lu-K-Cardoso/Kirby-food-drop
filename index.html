@@ -2,12 +2,70 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kirby Food Drop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Kirby Food Drop</h1>
-  <canvas id="game" width="480" height="640"></canvas>
+  <header>
+    <h1>Kirby Food Drop</h1>
+    <p>Pegue as comidas e fuja das bombas. Projeto de fã feito para um curso, sem fins comerciais.</p>
+  </header>
+
+  <main>
+    <!-- o jogo fica centralizado dentro de uma moldura amarela -->
+    <div class="frame">
+      <canvas id="game" width="480" height="640" aria-label="Jogo Kirby Food Drop"></canvas>
+    </div>
+
+    <section id="como-jogar">
+      <h2>Como jogar</h2>
+      <div class="cols">
+        <div>
+          <h3>Controles</h3>
+          <ul>
+            <li><b>← → ou A / D</b>: mover o Kirby</li>
+            <li><b>1 / 2 / 3</b>: escolher o modo de jogo</li>
+            <li><b>Enter ou clique</b>: começar e jogar de novo</li>
+            <li><b>Esc</b>: voltar para a tela inicial (na escolha de modo)</li>
+            <li><b>M</b>: voltar para a tela inicial (no game over)</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Itens</h3>
+          <ul>
+            <li>🍎🍰🍉🍓🍩🍔 valem 10 pontos</li>
+            <li>💣 tira uma vida</li>
+            <li>Você começa com 3 vidas. Quando elas acabam, é game over</li>
+            <li>O recorde fica salvo no seu navegador</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="creditos">
+      <h2>Créditos</h2>
+      <div class="cols">
+        <div>
+          <h3>Lucca</h3>
+          <p>Game Designer e Artista Digital: regras, balanceamento e visual</p>
+        </div>
+        <div>
+          <h3>Beraldo</h3>
+          <p>Programação de Lógica e Física: loop, movimento e colisões</p>
+        </div>
+        <div>
+          <h3>Lucca e Beraldo</h3>
+          <p>Programação de Estado e Interface: teclado, pontuação e telas</p>
+        </div>
+      </div>
+      <p class="note">Inspirado em Food Drop (Pou) e no personagem Kirby, da Nintendo. Todo o desenho foi feito em código.</p>
+    </section>
+  </main>
+
+  <!-- o script fica no fim do body: assim o canvas já existe quando o game.js roda -->
   <script src="game.js"></script>
 </body>
 </html>
