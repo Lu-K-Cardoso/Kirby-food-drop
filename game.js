@@ -30,9 +30,15 @@ const COMIDAS = ['🍎', '🍰', '🍉', '🍓', '🍩', '🍔'];
 let itens = [];
 let tempoNovoItem = 1;
 
+// ---------- Inalar (Espaço) ----------
+let folego = 100;          // energia da inalação (0 a 100)
+let semFolego = false;     // true quando zerou: só volta a inalar depois de recuperar 30
+let inalando = false;
+
 // ---------- Entrada ----------
 addEventListener('keydown', (e) => {
   if (e.key.startsWith('Arrow')) e.preventDefault();
+  if (e.key === ' ' && estado === 'jogando') e.preventDefault(); // espaço não rola a página durante o jogo
   teclas[e.key.toLowerCase()] = true;
 
   if (estado === 'titulo' && e.key === 'Enter') {
@@ -81,6 +87,9 @@ function iniciarJogo(novoModo) {
   vidas = 3;
   tempoNovoItem = 1;
   estado = 'jogando';
+  folego = 100;
+  semFolego = false;
+  inalando = false;
 }
 
 function terminarJogo() {
@@ -100,6 +109,18 @@ function moverKirby(dt) {
   kirby.vx = direcao * 380;
   kirby.x += kirby.vx * dt;
   kirby.x = Math.max(kirby.raio, Math.min(LARGURA - kirby.raio, kirby.x));
+}
+
+function atualizarFolego(dt) {
+  inalando = !!teclas[' '] && !semFolego && folego > 0;
+
+  if (inalando) {
+    folego -= 35 * dt;                         // inalar gasta energia
+    if (folego <= 0) { folego = 0; semFolego = true; }
+  } else {
+    folego = Math.min(100, folego + 22 * dt);  // descansando, recupera
+    if (semFolego && folego > 30) semFolego = false;
+  }
 }
 
 function criarItem() {
@@ -125,8 +146,13 @@ function atualizarItens(dt) {
     item.y += item.vy * dt;
 
     // colisão círculo com círculo: distância entre os centros < soma dos raios
-    const distancia = Math.hypot(kirby.x - item.x, kirby.y - item.y);
-    if (distancia < kirby.raio + item.raio - 8) {
+    const distancia = Math.hypot(kirby.x - item.x, kirby.y - item.y) || 1; // "|| 1" evita dividir por zero
+
+    // inalando, os itens perto do Kirby são puxados na direção dele
+    if (inalando && distancia < 180) {
+      item.x += (kirby.x - item.x) / distancia * 340 * dt;
+      item.y += (kirby.y - item.y) / distancia * 340 * dt;
+    }    if (distancia < kirby.raio + item.raio - 8) {
       item.morto = true;
       if (item.tipo === 'comida') pontos += 10;
       else vidas--;
@@ -478,6 +504,7 @@ function loopPrincipal(agora) {
   // só atualiza a lógica quando está jogando; nos outros estados o jogo fica parado
   if (estado === 'jogando') {
     moverKirby(dt);
+    atualizarFolego(dt);
     atualizarItens(dt);
   }
   desenhar();
