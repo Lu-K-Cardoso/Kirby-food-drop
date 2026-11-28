@@ -217,6 +217,12 @@ function desenharPlacar() {
   ctx.textAlign = 'right';
   ctx.font = '700 22px sans-serif';
   ctx.fillText('❤️'.repeat(Math.max(0, vidas)), LARGURA - 14, 30);
+
+    // vento: quanto mais setas, mais forte
+  const v = Math.round(ventoAtual);
+  const forca = 1 + (Math.abs(v) > 40) + (Math.abs(v) > 80); // cada "true" conta como 1
+  ctx.font = '600 14px sans-serif';
+  ctx.fillText('vento ' + (Math.abs(v) < 8 ? '·' : (v > 0 ? '→' : '←').repeat(forca)), LARGURA - 14, 56);
 }
 
 // Camada escura por cima do jogo, usada no menu e no game over
